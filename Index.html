@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ADMIN ELLA PRIME</title>
+<style>
+  body{background:#000;color:#F8C6D0;font-family:sans-serif;padding:20px}
+  .neon{color:#F8C6D0;text-shadow:0 0 10px #F8C6D0}
+  .box{border:1.5px solid #F8C6D0;box-shadow:0 0 12px #F8C6D0;border-radius:16px;padding:16px;margin:12px 0;background:#0a0a0a}
+  input,select{width:100%;padding:12px;margin:6px 0;border-radius:10px;border:1px solid #333;background:#111;color:#fff}
+  button{background:#F8C6D0;color:#000;border:none;padding:12px 20px;border-radius:20px;box-shadow:0 0 10px #F8C6D0;font-weight:bold;cursor:pointer;width:100%;margin-top:10px}
+  .preview img{width:80px;height:80px;object-fit:cover;border-radius:10px;border:1px solid #F8C6D0}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+</style>
+</head>
+<body>
+<h1 class="neon">ELLA PRIME - ADMIN</h1>
+<p style="color:#aaa;font-size:12px">Subí productos vos misma. Queda guardado en el celu.</p>
+
+<div class="box">
+  <h3 class="neon">+ Nuevo Producto</h3>
+  <input type="file" id="foto" accept="image/*">
+  <input id="nombre" placeholder="Nombre Ej: PALAZZO ENGOMADO">
+  <div class="grid">
+    <input id="talle" placeholder="Talle Ej: Talle 2">
+    <input id="precio" placeholder="Precio Ej: 36500" type="number">
+  </div>
+  <input id="desc" placeholder="Desc Ej: con cinto, sin frunce">
+  <button onclick="agregar()">AGREGAR AL CATÁLOGO ✨</button>
+  <div class="preview" id="prev"></div>
+</div>
+
+<div class="box">
+  <h3 class="neon">Productos cargados ( <span id="count">0</span> )</h3>
+  <div id="lista"></div>
+  <button onclick="exportar()" style="background:transparent;color:#F8C6D0;border:1px solid #F8C6D0">EXPORTAR CATALOGO PARA INDEX</button>
+</div>
+
+<script>
+let productos = JSON.parse(localStorage.getItem('ella_prime')||'[]');
+let fotoBase64="";
+
+document.getElementById('foto').addEventListener('change', e=>{
+  const reader=new FileReader();
+  reader.onload=()=>{ fotoBase64=reader.result; document.getElementById('prev').innerHTML=`<img src="${fotoBase64}">`; };
+  reader.readAsDataURL(e.target.files[0]);
+});
+
+function agregar(){
+  const p={
+    nombre:document.getElementById('nombre').value,
+    talle:document.getElementById('talle').value,
+    precio:document.getElementById('precio').value,
+    desc:document.getElementById('desc').value,
+    foto:fotoBase64
+  };
+  if(!p.nombre||!p.precio)return alert('Falta nombre y precio');
+  productos.push(p);
+  localStorage.setItem('ella_prime',JSON.stringify(productos));
+  render(); alert('Agregado!');
+  document.getElementById('nombre').value="";document.getElementById('precio').value="";
+}
+
+function render(){
+  document.getElementById('count').innerText=productos.length;
+  document.getElementById('lista').innerHTML=productos.map((p,i)=>`
+    <div style="display:flex;gap:10px;align-items:center;border-bottom:1px solid #222;padding:8px 0">
+      <img src="${p.foto}" style="width:50px;height:50px;object-fit:cover;border-radius:8px">
+      <div style="flex:1;font-size:12px"><b>${p.nombre}</b><br>${p.talle} - $${p.precio}</div>
+      <div onclick="borrar(${i})" style="cursor:pointer">❌</div>
+    </div>
+  `).join('');
+}
+function borrar(i){ productos.splice(i,1); localStorage.setItem('ella_prime',JSON.stringify(productos)); render(); }
+function exportar(){
+  const html = productos.map(p=>`
+  <div class="card neon-box">
+    <img src="${p.foto}" style="width:100%;height:180px;object-fit:cover;border-radius:12px">
+    <h3>${p.nombre}</h3><p>${p.talle} - ${p.desc}</p><div class="precio">$${p.precio}</div>
+    <a class="btn" href="https://wa.me/5491161080941?text=Hola!%20Quiero%20${encodeURIComponent(p.nombre)}%20${p.talle}%20$${p.precio}">ADD TO BAG</a>
+  </div>`).join('');
+  const w=window.open(); w.document.write(`<pre>${html.replace(/</g,'&lt;')}</pre>`);
+}
+render();
+</script>
+</body>
+</html>
